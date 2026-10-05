@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <sys/time.h>
+#include <time.h>
 
 #define MAX_TAILLE_DATA_KO 4096
 #define CACHE_LINE_SIZE 64
@@ -14,7 +14,7 @@ int main(void)
     int pas = CACHE_LINE_SIZE / sizeof(int);
 
     volatile long long x = 0;
-    struct timeval t1, t2;
+    struct timespec t1, t2;
 
     for (taille_data = CACHE_LINE_SIZE; taille_data <= MAX_TAILLE_DATA_KO * 1024; taille_data += CACHE_LINE_SIZE) {
         nbdonnee = taille_data / sizeof(int);
@@ -25,17 +25,17 @@ int main(void)
         }
 
         /* Début de la mesure */
-        gettimeofday(&t1, NULL);
+        clock_gettime(CLOCK_MONOTONIC, &t1);
 
         for (i = 0; i < nbdonnee; i += pas) {
             x += tab[i];
         }
 
         /* Fin de la mesure */
-        gettimeofday(&t2, NULL);
+        clock_gettime(CLOCK_MONOTONIC, &t2);
 
         /* Temps moyen d'un accès en microsecondes */
-        double temps_total = (double)(t2.tv_sec - t1.tv_sec) * 1000000.0 + (double)(t2.tv_usec - t1.tv_usec);
+        double temps_total = (double)(t2.tv_sec - t1.tv_sec) * 1000000.0 + (double)(t2.tv_nsec - t1.tv_nsec);
         double temps_acces_moyen = temps_total / (nbdonnee / pas);
 
         printf("%d : %.6f\n", taille_data, temps_acces_moyen);
